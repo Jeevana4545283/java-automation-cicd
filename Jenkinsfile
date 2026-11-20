@@ -31,6 +31,11 @@ pipeline {
                 echo 'Running Maven test phase'
                 sh 'mvn test'
             }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
         }
 
         stage('Package') {
@@ -73,6 +78,7 @@ pipeline {
     post {
         success {
             echo 'CI/CD Pipeline completed successfully!'
+            echo 'JUnit Test Reports published successfully!'
             echo 'Docker image pushed to Docker Hub!'
         }
 
