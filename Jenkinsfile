@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_IMAGE = 'jeevana/java-automation-app'
+        DOCKER_IMAGE = 'sapavath/java-automation-app'
     }
 
     stages {
