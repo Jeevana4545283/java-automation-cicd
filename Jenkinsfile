@@ -6,11 +6,15 @@ pipeline {
         maven 'Maven-3.9'
     }
 
+    environment {
+        DOCKER_IMAGE = 'jeevana/java-automation-app'
+    }
+
     stages {
 
         stage('Checkout') {
             steps {
-                echo 'Source code checkout from GitHub'
+                echo 'Checking out source code'
                 checkout scm
             }
         }
@@ -24,7 +28,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo 'Running automated tests'
+                echo 'Running Maven test phase'
                 sh 'mvn test'
             }
         }
@@ -42,20 +46,38 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo 'Building Docker image'
+                sh 'docker build -t $DOCKER_IMAGE:latest .'
+            }
+        }
 
-                sh 'docker build -t java-automation-app:latest .'
+        stage('Docker Hub Login & Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login \
+                            -u "$DOCKER_USER" --password-stdin
+
+                        docker push $DOCKER_IMAGE:latest
+
+                        docker logout
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Java CI/CD Pipeline completed successfully!'
-            echo 'Docker image created successfully!'
+            echo 'CI/CD Pipeline completed successfully!'
+            echo 'Docker image pushed to Docker Hub!'
         }
 
         failure {
-            echo 'Pipeline failed. Check the Console Output.'
+            echo 'Pipeline failed. Check Console Output.'
         }
     }
 }
