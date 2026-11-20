@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Source code checkout from GitHub'
@@ -16,6 +17,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                echo 'Compiling Java application'
                 sh 'mvn clean compile'
             }
         }
@@ -29,18 +31,31 @@ pipeline {
 
         stage('Package') {
             steps {
+                echo 'Packaging Java application'
                 sh 'mvn package'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+
+                archiveArtifacts artifacts: 'target/*.jar',
+                                 fingerprint: true
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo 'Building Docker image'
+
+                sh 'docker build -t java-automation-app:latest .'
             }
         }
     }
 
     post {
         success {
-            echo 'Java Maven build completed successfully!'
+            echo 'Java CI/CD Pipeline completed successfully!'
+            echo 'Docker image created successfully!'
         }
+
         failure {
-            echo 'Build failed. Check the console output.'
+            echo 'Pipeline failed. Check the Console Output.'
         }
     }
 }
